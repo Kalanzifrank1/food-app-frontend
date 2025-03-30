@@ -11,7 +11,6 @@ import LoadingButton from "@/components/LoadingButton";
 import { Button } from "@/components/ui/button";
 import { Restaurant } from "@/types";
 
-// Enhanced form schema with better validation
 const formSchema = z.object({
   restaurantName: z.string({
     required_error: "Restaurant name is required"
@@ -47,12 +46,13 @@ const formSchema = z.object({
 type RestaurantFormData = z.infer<typeof formSchema>;
 
 type Props = {
-  restaurant?: Restaurant;
+  restaurant?: Restaurant | null;  // Now explicitly accepts null
   onSave: (restaurantFormData: FormData) => void;
   isLoading: boolean;
+  isError?: boolean;              // New prop for error state
 };
 
-const ManageRestaurantForm = ({ onSave, isLoading, restaurant }: Props) => {
+const ManageRestaurantForm = ({ onSave, isLoading, isError, restaurant = null }: Props) => {
   const form = useForm<RestaurantFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,48 +60,64 @@ const ManageRestaurantForm = ({ onSave, isLoading, restaurant }: Props) => {
       city: "",
       country: "",
       deliveryPrice: 0,
-      estimatedDeliveryTime: 30, // Default to 30 minutes
+      estimatedDeliveryTime: 30,
       cuisines: [],
       menuItems: [{ name: "", price: 0 }],
-      imageFile: undefined
+      imageFile: undefined,
+      imageUrl: undefined
     }
   });
 
-  // Improved data loading with proper type conversion
+  // Initialize form based on restaurant data or empty state
   useEffect(() => {
-    if (!restaurant) return;
-
-    const formatPrice = (price: number) => {
-      return price ? Math.round(price / 100) : 0;
+    const defaultValues = {
+      restaurantName: "",
+      city: "",
+      country: "",
+      deliveryPrice: 0,
+      estimatedDeliveryTime: 30,
+      cuisines: [],
+      menuItems: [{ name: "", price: 0 }],
+      imageFile: undefined,
+      imageUrl: undefined
     };
 
-    const updatedRestaurant = {
-      ...restaurant,
-      deliveryPrice: formatPrice(restaurant.deliveryPrice),
-      menuItems: restaurant.menuItems?.map(item => ({
-        ...item,
-        price: formatPrice(item.price)
-      })) || []
-    };
+    // If no restaurant or error, reset to defaults
+    if (isError || restaurant === null) {
+      form.reset(defaultValues);
+      return;
+    }
 
-    form.reset(updatedRestaurant);
-  }, [form, restaurant]);
+    // If we have restaurant data, format and set values
+    if (restaurant) {
+      const formatPrice = (price: number) => price ? Math.round(price / 100) : 0;
 
-  // Robust form submission handler
+      form.reset({
+        ...defaultValues,
+        ...restaurant,
+        deliveryPrice: formatPrice(restaurant.deliveryPrice),
+        menuItems: restaurant.menuItems?.map(item => ({
+          name: item.name,
+          price: formatPrice(item.price)
+        })) || defaultValues.menuItems
+      });
+    }
+  }, [form, restaurant, isError]);
+
   const onSubmit = async (formDataJson: RestaurantFormData) => {
     try {
       const formData = new FormData();
 
-      // Append basic fields
+      // Basic fields
       formData.append("restaurantName", formDataJson.restaurantName);
       formData.append("city", formDataJson.city);
       formData.append("country", formDataJson.country);
 
-      // Convert prices back to cents
+      // Convert prices to cents (backend format)
       formData.append("deliveryPrice", String(Math.round((formDataJson.deliveryPrice || 0) * 100)));
       formData.append("estimatedDeliveryTime", String(formDataJson.estimatedDeliveryTime));
 
-      // Handle arrays safely
+      // Arrays
       formDataJson.cuisines?.forEach((cuisine, index) => {
         formData.append(`cuisines[${index}]`, cuisine);
       });
@@ -111,7 +127,7 @@ const ManageRestaurantForm = ({ onSave, isLoading, restaurant }: Props) => {
         formData.append(`menuItems[${index}][price]`, String(Math.round((menuItem.price || 0) * 100)));
       });
 
-      // Handle image (either file or URL)
+      // Image handling
       if (formDataJson.imageFile) {
         formData.append("imageFile", formDataJson.imageFile);
       } else if (formDataJson.imageUrl) {
@@ -121,7 +137,6 @@ const ManageRestaurantForm = ({ onSave, isLoading, restaurant }: Props) => {
       await onSave(formData);
     } catch (error) {
       console.error("Form submission error:", error);
-      // Consider adding user feedback here (e.g., toast notification)
     }
   };
 
