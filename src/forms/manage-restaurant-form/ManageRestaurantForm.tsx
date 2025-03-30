@@ -52,7 +52,7 @@ type Props = {
   isError?: boolean;              // New prop for error state
 };
 
-const ManageRestaurantForm = ({ onSave, isLoading, isError, restaurant = null }: Props) => {
+const ManageRestaurantForm = ({ onSave, isLoading, isError, restaurant }: Props) => {
   const form = useForm<RestaurantFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
