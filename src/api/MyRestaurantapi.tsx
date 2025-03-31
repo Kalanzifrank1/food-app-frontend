@@ -20,7 +20,11 @@ export const useGetMyRestaurant = () => {
             }
         })
 
-        if(!response){
+        // if (response.status === 404) {
+        //     //return null// No restaurant exists
+        // }
+
+        if(!response.ok){
             throw new Error("Failed to get restaurant")
         }
         return response.json()
