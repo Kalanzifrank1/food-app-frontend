@@ -30,10 +30,14 @@ export const useGetMyRestaurant = () => {
         return response.json()
     }
 
-    const { data: restaurant, isPending } = useQuery({
+    const { data: restaurant, isPending, error } = useQuery({
         queryKey: ['fetchMyRestaurant'], // Query key should be an array
         queryFn: getMyRestaurantRequest // Your fetch function})
     })
+
+    if(error){
+        toast.error(error.toString())
+    }
 
     return{
         restaurant, isPending
