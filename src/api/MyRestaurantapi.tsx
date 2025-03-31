@@ -16,7 +16,8 @@ export const useGetMyRestaurant = () => {
         const response = await fetch(`${API_BASE_URL}/api/my/restaurant`, {
             method: "GET",
             headers: { 
-                Authorization: `Bearer ${accessToken}`
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
             }
         })
 
