@@ -57,6 +57,7 @@ export const useCreateMyRestaurant = () => {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
             },
             body: restaurantFormData,
         });
@@ -97,7 +98,8 @@ export const useUpdateRestaurant = () => {
         const response = await fetch(`${API_BASE_URL}/api/my/restaurant`, {
             method: "PUT",
             headers: {
-                Authorization: `Bearer ${accessToken}`
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
             },
             body: restaurantFormData
         })
