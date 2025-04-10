@@ -46,7 +46,7 @@ const formSchema = z.object({
 type RestaurantFormData = z.infer<typeof formSchema>;
 
 type Props = {
-  restaurant?: Restaurant | null;  // Now explicitly accepts null
+  restaurant?: Restaurant;  // Now explicitly accepts null
   onSave: (restaurantFormData: FormData) => void;
   isLoading: boolean;
   isError?: boolean;              // New prop for error state
@@ -94,7 +94,7 @@ const ManageRestaurantForm = ({ onSave, isLoading, isError, restaurant }: Props)
 
       form.reset({
         ...defaultValues,
-        ...restaurant,
+        ...restaurant, 
         deliveryPrice: formatPrice(restaurant.deliveryPrice),
         menuItems: restaurant.menuItems?.map(item => ({
           name: item.name,

@@ -125,3 +125,77 @@ export const useUpdateRestaurant = () => {
         isSuccess
     }
 }
+
+export const useGetMyRestaurantOrders = () => {
+    const { getAccessTokenSilently} = useAuth0()
+
+    const getMyRestaurantOrders = async () => {
+        const accessToken = getAccessTokenSilently()
+
+        const response = await fetch(`${API_BASE_URL}/api/my/restaurant/order`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            }
+        })
+        if(!response.ok){
+            throw new Error("Failed to fetch orders")
+        }
+        return response.json() 
+    }
+
+    const { data: orders, isPending } = useQuery({
+        queryKey: ['fetchMyRestaurantOrder'],
+        queryFn: getMyRestaurantOrders 
+    })
+
+    return {
+        orders, isPending
+    }
+}
+
+export type UpdateStatusOrderRequest = {
+    orderId: string;
+    status: string;
+}
+
+export const useUpdateMyRestaurantOrder = () => {
+    const {getAccessTokenSilently} = useAuth0()
+
+    const updateMyRestaurantOrder = async(updateStatusOrderRequest: UpdateStatusOrderRequest) => {
+        const accessToken = await getAccessTokenSilently()
+
+        const response = await fetch(`${API_BASE_URL}/api/my/restaurant/order/${updateStatusOrderRequest.orderId}/status`, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ status: updateStatusOrderRequest.status})
+        })
+
+        if(!response.ok){
+            throw new Error("Failed to update status")
+        }
+
+        return response.json()
+    }
+
+    const { mutateAsync: 
+        updateRestaurantStatus, isPending, isError, reset,
+         isSuccess} =
+          useMutation({ mutationFn: updateMyRestaurantOrder})
+
+    if(isSuccess){
+        toast.success("order updated")
+    }
+    if(isError){
+        toast.error("unable to update order")
+        reset()
+    }
+
+    return {
+        updateRestaurantStatus,
+        isPending,
+    }
+}
